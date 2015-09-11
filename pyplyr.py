@@ -13,14 +13,12 @@ class Pyplyr(object):
         self.__df = df
 
     def __repr__(self):
+        strings = [str(self.__df)]
         if isinstance(self.__df, GroupBy):
-            self.__pp_group(self.__df)
-        self.__df.__str__()
-
-    def __pp_group(self, group):
-        for key, df in group:
-            print(key)
-            print(df)
+            for key, df in self.__df:
+                strings.append("GroupedDataFrame: " + key)
+                strings.append(str(df))
+        return "\n".join(strings)
 
     def select(self, *cols):
         return Pyplyr(self.__df[list(cols)])
@@ -43,11 +41,24 @@ class Pyplyr(object):
 
     def summarize(self, **kwargs):
         series_list = []
-        for target_col, func in kwargs.items():
-            val = func(self.__df[target_col])
-            series = Series([val], name=target_col)
-            series_list.append(series)
-        return Pyplyr(pd.concat(series_list, axis=1))
+        if isinstance(self.__df, GroupBy):
+            for group_key, df in self.__df:
+                _series_list = []
+                for target_col, func in kwargs.items():
+                    val = func(df[target_col])
+                    series = Series([val], index=[group_key], name=target_col)
+                    _series_list.append(series)
+                series_list.append(pd.concat(_series_list, axis=1))
+            return Pyplyr(pd.concat(series_list, axis=0))
+        else:
+            for target_col, func in kwargs.items():
+                val = func(self.__df[target_col])
+                series = Series([val], name=target_col)
+                series_list.append(series)
+            return Pyplyr(pd.concat(series_list, axis=1))
+
+    def group_by(self, *cols):
+        return Pyplyr(self.__df.groupby(by=cols))
 
     def data(self):
         """Called at end of method chains"""
