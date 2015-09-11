@@ -7,5 +7,5 @@ python:
   - "3.4"
 install:
   - python setup.py -q install
-script: nosetests -s -v
+script: nosetests -s -v --with-coverage --cover-package=pyplyr --cover-branches --cover-html
 cache: pip
