@@ -10,7 +10,7 @@ with open("README.md") as f:
 setup(
     name="pyplyr",
     version="0.0.1",
-    description="SQL like method chains for pandas DataFrame.",
+    description="dplyr like method chains for pandas DataFrame.",
     author="airtoxin",
     author_email="airtoxin@icloud.com",
     url="https://github.com/airtoxin/pyplyr",
