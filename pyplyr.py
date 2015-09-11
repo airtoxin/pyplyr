@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import pandas as pd
 from pandas import Series, DataFrame
+from pandas.core.groupby import GroupBy
 
 class Pyplyr(object):
     """Pyplyr"""
@@ -10,8 +12,15 @@ class Pyplyr(object):
         super(Pyplyr, self).__init__()
         self.__df = df
 
-    def __str__(self):
-        return self.__df.__str__()
+    def __repr__(self):
+        if isinstance(self.__df, GroupBy):
+            self.__pp_group(self.__df)
+        self.__df.__str__()
+
+    def __pp_group(self, group):
+        for key, df in group:
+            print(key)
+            print(df)
 
     def select(self, *cols):
         return Pyplyr(self.__df[list(cols)])
@@ -34,10 +43,9 @@ class Pyplyr(object):
 
     def summarize(self, **kwargs):
         series_list = []
-        for new_col, assets in kwargs.items():
-            target_col, func = assets
+        for target_col, func in kwargs.items():
             val = func(self.__df[target_col])
-            series = Series([val], name=new_col)
+            series = Series([val], name=target_col)
             series_list.append(series)
         return Pyplyr(pd.concat(series_list, axis=1))
 

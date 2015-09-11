@@ -70,15 +70,13 @@ class TestPyplyr(object):
 
     def test_summarize(self):
         result = self.pyplyr.summarize(
-            c0sum=("col0", sum),
-            c1cnt=("col1", len),
-            hogecnt=("label1", lambda iter: len([i for i in iter if i == "hoge"]))
+            col0=sum,
+            col1=len,
+            label1=lambda iter: len([i for i in iter if i == "hoge"])
         )
         df = result._Pyplyr__df
-        expected = DataFrame([[50, 5, 3]], columns=["c0sum", "c1cnt", "hogecnt"])
         assert isinstance(result, Pyplyr)
-        assert set(df.columns) == set(["c0sum", "c1cnt", "hogecnt"])
-        assert len(df) == 1
-        assert df.c0sum[0] == 50
-        assert df.c1cnt[0] == 5
-        assert df.hogecnt[0] == 3
+        assert len(df.columns) == 3
+        assert df["col0"].equals(Series([50], name="col0"))
+        assert df["col1"].equals(Series([5], name="col1"))
+        assert df["label1"].equals(Series([3], name="label1"))
