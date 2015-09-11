@@ -3,6 +3,7 @@
 
 from pyplyr import Pyplyr
 from pandas import Series, DataFrame
+from pandas.core.groupby import GroupBy
 
 class TestPyplyr(object):
     def setup(self):
@@ -29,6 +30,7 @@ class TestPyplyr(object):
         result = self.pyplyr.select(*cols)
         df = result._Pyplyr__df
         assert isinstance(result, Pyplyr)
+        assert isinstance(df, DataFrame)
         assert list(df.columns) == cols
         assert (df == self.df[cols]).all().all()
 
@@ -43,6 +45,7 @@ class TestPyplyr(object):
         )
         df = result._Pyplyr__df
         assert isinstance(result, Pyplyr)
+        assert isinstance(df, DataFrame)
         assert set(df.columns) == set(self.df.columns)
         assert (df == self.df[Series([True, False, True, True, True])]).all().all()
 
@@ -54,6 +57,7 @@ class TestPyplyr(object):
         )
         df = result._Pyplyr__df
         assert isinstance(result, Pyplyr)
+        assert isinstance(df, DataFrame)
         assert set(df.columns) == set(self.df.columns)
         assert (df == self.df[Series([True, False, True, True, True])]).all().all()
 
@@ -65,6 +69,7 @@ class TestPyplyr(object):
         )
         df = result._Pyplyr__df
         assert isinstance(result, Pyplyr)
+        assert isinstance(df, DataFrame)
         assert set(df.columns) == set(self.df.columns)
         assert (df == self.df[Series([False, False, True, False, True])]).all().all()
 
@@ -76,7 +81,34 @@ class TestPyplyr(object):
         )
         df = result._Pyplyr__df
         assert isinstance(result, Pyplyr)
+        assert isinstance(df, DataFrame)
         assert len(df.columns) == 3
         assert df["col0"].equals(Series([50], name="col0"))
         assert df["col1"].equals(Series([5], name="col1"))
         assert df["label1"].equals(Series([3], name="label1"))
+
+    def test_group_by(self):
+        result = self.pyplyr.group_by("label1")
+        df = result._Pyplyr__df
+        assert isinstance(result, Pyplyr)
+        assert isinstance(df, GroupBy)
+        assert len(df) == 2
+
+        for key, group_df in df:
+            if key == "fuga":
+                assert key == "fuga"
+                expected = group_df.ix[[1, 3], group_df.columns]
+                assert group_df.equals(expected)
+            else:
+                assert key == "hoge"
+                expected = group_df.ix[[0, 2, 4], group_df.columns]
+                assert group_df.equals(expected)
+
+    def test_group_summarize(self):
+        df = self.pyplyr.group_by("label1").summarize(col0=sum, col1=len).data()
+        assert isinstance(df, DataFrame)
+        assert len(df) == 2
+        assert set(df.index) == set(["fuga", "hoge"])
+        assert set(df.columns) == set(["col0", "col1"])
+        expected = DataFrame([[20, 2], [30, 3]], index=["fuga", "hoge"], columns=["col0", "col1"])
+        assert df.equals(expected)
