@@ -20,6 +20,10 @@ class Pyplyr(object):
                 strings.append(str(df))
         return "\n".join(strings)
 
+    def data(self):
+        """Called at end of method chains"""
+        return self.__df
+
     def select(self, *cols):
         return Pyplyr(self.__df[list(cols)])
 
